@@ -1,0 +1,69 @@
+# Data files - keep raw and derived datasets out of the repo
+*.csv
+*.tsv
+*.parquet
+*.feather
+*.arrow
+*.json
+*.jsonl
+*.ndjson
+*.xlsx
+*.xls
+*.h5
+*.hdf5
+*.npy
+*.npz
+*.db
+*.sqlite
+*.sqlite3
+
+# Archives (Kaggle bundles)
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.gz
+*.7z
+*.rar
+
+# Kaggle competition metadata downloaded with the data
+data_description.txt
+
+# Model artifacts / checkpoints
+*.pkl
+*.pickle
+*.joblib
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.bin
+*.safetensors
+models/
+checkpoints/
+runs/
+wandb/
+mlruns/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.ipynb_checkpoints/
+
+# Environments / secrets
+.env
+.venv/
+venv/
+env/
+kaggle.json
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
