@@ -16,7 +16,7 @@ def download_data():
         exit()
 
     # copy api key from env vars for login
-    pyperclip.copy(os.getenv('KAGGLE_KEY'))
+    pyperclip.copy(os.getenv('KAGGLE_API_TOKEN'))
     print('copied API token')
     kagglehub.login()
 
