@@ -119,10 +119,10 @@ def merge_levels(df, col, mapping):
     return df
 
 
-def add_age_is_decade(df):
-    """Flag ages on a round decade (30, 40, ...)."""
+def add_age_flag(df, ages=(35, 36)):
+    """Flag the over-represented ages (35 and 36 are the most common ages under 40 in train)."""
     df = df.copy()
-    df['age_is_decade'] = (df['Age'] % 10 == 0).astype(int)
+    df['age_flag'] = df['Age'].isin(ages).astype(int)
     return df
 
 
@@ -137,7 +137,7 @@ def engineer(df):
     # df = log_transform(df, ['Number_of_Cars_Owned', 'Charging_Stations_Near_Home', 'Charging_Stations_Near_Work'])
     # df = smooth(df, ['Charging_Stations_Near_Work'])
     # df = merge_levels(df, 'Gender', {'Other': 'Male'})
-    # df = add_age_is_decade(df)
+    # df = add_age_flag(df)
     # df = drop_features(df, ['Gender', 'Current_Car_Type'])
     return df
 
