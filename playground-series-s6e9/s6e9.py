@@ -10,6 +10,7 @@ from matplotlib.patches import Patch
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import RocCurveDisplay, roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 
@@ -115,14 +116,21 @@ def train(X, y):
     print(f'oof auc {roc_auc_score(y, oof):.5f}')
     return models, oof
 
-def pi(s):
-    samp = train.sample(100_000, random_state=s.SEED)
-    Xs, _ = s.prep(samp)
-    ys = samp[s.TARGET]
-    cut = int(len(Xs) * 0.8)
-    m = s.make_model().fit(Xs.iloc[:cut], ys.iloc[:cut])
-    pi = permutation_importance(m, Xs.iloc[cut:], ys.iloc[cut:], scoring='roc_auc', n_repeats=5, random_state=s.SEED, n_jobs=-1)
-    return pd.Series(pi.importances_mean, index=Xs.columns).sort_values(ascending=False).round(4)
+
+def pi(df, sample=100_000):
+    """
+    Permutation importance: one quick fit on a sample, AUC drop when each feature is shuffled.
+    Takes a frame that still has the target column (raw or engineered) and preps it itself,
+    so the same call works before and after engineering.
+    """
+    d = df.sample(min(sample, len(df)), random_state=SEED)
+    X, _ = prep(d)
+    y = d[TARGET]
+    cut = int(len(X) * 0.8)
+    m = make_model().fit(X.iloc[:cut], y.iloc[:cut])
+    r = permutation_importance(m, X.iloc[cut:], y.iloc[cut:], scoring='roc_auc', n_repeats=5, random_state=SEED, n_jobs=-1)
+    return pd.Series(r.importances_mean, index=X.columns).sort_values(ascending=False).round(4)
+
 
 def oof_report(X, y, oof):
     """Out-of-fold analysis: ROC curve, calibration by decile, weakest slices."""
