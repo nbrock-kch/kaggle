@@ -55,7 +55,8 @@ def prep(df, cats=None):
 def plot_features(df, cols=None, ncols=4, sample=50_000, path=None):
     """
     One panel per feature, distribution split by target: histograms for numeric,
-    count bars for categorical / low-cardinality. Blue = target 1, orange = 0;
+    count bars for categorical / low-cardinality; integer columns get one bin per
+    value. Blue = target 1, orange = 0;
     matching shapes mean the feature does not separate the classes.
     Pass `path` to also save the figure (png).
     """
@@ -67,8 +68,12 @@ def plot_features(df, cols=None, ncols=4, sample=50_000, path=None):
         if d[c].dtype == object or d[c].nunique() <= 10:
             d.groupby(c)[TARGET].value_counts().unstack().plot.bar(ax=ax, color=colors, width=0.8, legend=False)
         else:
+            # integer-valued columns get one bin per value so no bin ever straddles two values
+            v = d[c].dropna()
+            whole = (v % 1 == 0).all() and v.nunique() <= 100
+            bins = np.arange(v.min() - 0.5, v.max() + 1.5) if whole else 40
             for t, col in colors.items():
-                ax.hist(d.loc[d[TARGET] == t, c], bins=40, alpha=0.6, color=col)
+                ax.hist(d.loc[d[TARGET] == t, c], bins=bins, alpha=0.6, color=col)
         ax.set_title(c, fontsize=10); ax.set_xlabel(''); ax.tick_params(labelsize=8)
     for ax in axes.flat[len(cols):]:
         ax.axis('off')
