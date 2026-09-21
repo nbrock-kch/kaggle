@@ -6,6 +6,7 @@ Runs unchanged locally and on Kaggle.
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
@@ -48,6 +49,34 @@ def prep(df, cats=None):
     for c in obj:
         X[c] = pd.Categorical(X[c], categories=cats[c])
     return X, cats
+
+
+def plot_features(df, cols=None, ncols=4, sample=50_000, path=None):
+    """
+    One panel per feature, distribution split by target: histograms for numeric,
+    count bars for categorical / low-cardinality. Blue = target 1, orange = 0;
+    matching shapes mean the feature does not separate the classes.
+    Pass `path` to also save the figure (png).
+    """
+    d = df.sample(min(sample, len(df)), random_state=SEED)
+    cols = cols or [c for c in d.columns if c not in (ID, TARGET)]
+    colors = {0: '#eb6834', 1: '#2a78d6'}
+    fig, axes = plt.subplots(-(-len(cols) // ncols), ncols, figsize=(4 * ncols, 3 * -(-len(cols) // ncols)))
+    for ax, c in zip(axes.flat, cols):
+        if d[c].dtype == object or d[c].nunique() <= 10:
+            d.groupby(c)[TARGET].value_counts().unstack().plot.bar(ax=ax, color=colors, width=0.8, legend=False)
+        else:
+            for t, col in colors.items():
+                ax.hist(d.loc[d[TARGET] == t, c], bins=40, alpha=0.6, color=col)
+        ax.set_title(c, fontsize=10); ax.set_xlabel(''); ax.tick_params(labelsize=8)
+    for ax in axes.flat[len(cols):]:
+        ax.axis('off')
+    fig.legend(handles=[Patch(color=colors[1], label='Yes'), Patch(color=colors[0], label='No')], title=TARGET, loc='lower right')
+    fig.tight_layout()
+    if path:
+        fig.savefig(path, dpi=100, bbox_inches='tight')
+        print(f'wrote {path}')
+    plt.show()
 
 
 # engineering
