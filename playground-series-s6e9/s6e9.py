@@ -83,15 +83,9 @@ def plot_features(df, cols=None, ncols=4, sample=50_000, path=None):
 def engineer(df):
     """Optimizing for increased predictive capacity."""
 
-    # stripping ineffective columns  for enhances focus
-      │ Environmental_Concern_Level │ 0.1974   │
-  ├─────────────────────────────┼──────────┤
-  │ Subsidy_Available           │ 0.1687   │
-  ├─────────────────────────────┼──────────┤
-  │ Annual_Income_USD           │ 0.0280   │
-  ├─────────────────────────────┼──────────┤
-  │ Range_Anxiety_Level         │ 0.0091   
-    df = df['']
+    # standardize all
+
+    # quartile 
 
 
 # --- train
@@ -121,6 +115,14 @@ def train(X, y):
     print(f'oof auc {roc_auc_score(y, oof):.5f}')
     return models, oof
 
+def pi(s):
+    samp = train.sample(100_000, random_state=s.SEED)
+    Xs, _ = s.prep(samp)
+    ys = samp[s.TARGET]
+    cut = int(len(Xs) * 0.8)
+    m = s.make_model().fit(Xs.iloc[:cut], ys.iloc[:cut])
+    pi = permutation_importance(m, Xs.iloc[cut:], ys.iloc[cut:], scoring='roc_auc', n_repeats=5, random_state=s.SEED, n_jobs=-1)
+    return pd.Series(pi.importances_mean, index=Xs.columns).sort_values(ascending=False).round(4)
 
 def oof_report(X, y, oof):
     """Out-of-fold analysis: ROC curve, calibration by decile, weakest slices."""
