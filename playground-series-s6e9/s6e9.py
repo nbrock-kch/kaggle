@@ -80,13 +80,61 @@ def plot_features(df, cols=None, ncols=4, sample=50_000, path=None):
     plt.show()
 
 
-# engineering
+# --- engineering
+# Each step is df -> df on the raw frame (target column optional), so the same call
+# works on train and on test. Try one step at a time in the notebook; keep PASSes in engineer().
+def clip_outliers(df, cols, lo=0.01, hi=0.99):
+    """Winsorize: clip each column to its [lo, hi] quantiles, pulling outliers in."""
+    df = df.copy()
+    for c in cols:
+        df[c] = df[c].clip(df[c].quantile(lo), df[c].quantile(hi))
+    return df
+
+
+def log_transform(df, cols):
+    """log1p on right-skewed non-negative columns."""
+    df = df.copy()
+    for c in cols:
+        df[c] = np.log1p(df[c])
+    return df
+
+
+def smooth(df, cols, width=3):
+    """Bin a noisy numeric column into buckets of `width` (floor), damping high variance."""
+    df = df.copy()
+    for c in cols:
+        df[c] = (df[c] // width) * width
+    return df
+
+
+def merge_levels(df, col, mapping):
+    """Fold rare category levels into others, e.g. {'Other': 'Male'}."""
+    df = df.copy()
+    df[col] = df[col].replace(mapping)
+    return df
+
+
+def add_age_is_decade(df):
+    """Flag ages on a round decade (30, 40, ...)."""
+    df = df.copy()
+    df['age_is_decade'] = (df['Age'] % 10 == 0).astype(int)
+    return df
+
+
+def drop_features(df, cols):
+    """Remove low-importance columns."""
+    return df.drop(columns=cols)
+
+
 def engineer(df):
-    """Optimizing for increased predictive capacity."""
-
-    # standardize all
-
-    # quartile 
+    """Kept steps (PASS in the notebook), in order. Applied to train and test alike."""
+    # df = clip_outliers(df, ['Annual_Income_USD', 'Daily_Commute_km', 'Charging_Stations_Near_Work'])
+    # df = log_transform(df, ['Number_of_Cars_Owned', 'Charging_Stations_Near_Home', 'Charging_Stations_Near_Work'])
+    # df = smooth(df, ['Charging_Stations_Near_Work'])
+    # df = merge_levels(df, 'Gender', {'Other': 'Male'})
+    # df = add_age_is_decade(df)
+    # df = drop_features(df, ['Gender', 'Current_Car_Type'])
+    return df
 
 
 # --- train
@@ -115,6 +163,18 @@ def train(X, y):
         models.append(m)
     print(f'oof auc {roc_auc_score(y, oof):.5f}')
     return models, oof
+
+
+def run(df):
+    """prep -> train on a (possibly engineered) frame. Prints the gain over the saved baseline."""
+    X, cats = prep(df)
+    y = df[TARGET]
+    models, oof = train(X, y)
+    base = Path('baseline_results.txt')
+    if base.exists():
+        b = float(base.read_text().split('oof auc ')[1].split()[0])
+        print(f'baseline {b:.5f}  delta {roc_auc_score(y, oof) - b:+.5f}')
+    return X, y, cats, models, oof
 
 
 def pi(df, sample=100_000):
