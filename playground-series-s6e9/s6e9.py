@@ -50,6 +50,21 @@ def prep(df, cats=None):
     return X, cats
 
 
+# engineering
+def engineer(df):
+    """Optimizing for increased predictive capacity."""
+
+    # stripping ineffective columns  for enhances focus
+      │ Environmental_Concern_Level │ 0.1974   │
+  ├─────────────────────────────┼──────────┤
+  │ Subsidy_Available           │ 0.1687   │
+  ├─────────────────────────────┼──────────┤
+  │ Annual_Income_USD           │ 0.0280   │
+  ├─────────────────────────────┼──────────┤
+  │ Range_Anxiety_Level         │ 0.0091   
+    df = df['']
+
+
 # --- train
 def make_model():
     # HGB: boosted trees suit mixed tabular data, fast on 668k rows (histogram binning),
